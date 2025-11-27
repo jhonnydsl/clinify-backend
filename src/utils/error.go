@@ -21,3 +21,11 @@ func ConflictError(message string) *dtos.APIError {
 func InternalServerError(message string) *dtos.APIError {
 	return &dtos.APIError{StatusCode: http.StatusInternalServerError, Message: message}
 }
+
+func GetStatusCode(err error) int {
+	apiErr, ok := err.(*dtos.APIError)
+	if ok {
+		return apiErr.StatusCode
+	}
+	return http.StatusInternalServerError
+}

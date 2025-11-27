@@ -32,22 +32,20 @@ func ValidateAdminInput(admin dtos.AdminInput) error {
 		return fmt.Errorf("the password must be at least 6 characters long")
 	}
 
-	birth := admin.BirthDate
-
-	if birth.IsZero() {
+	if strings.TrimSpace(admin.BirthDate) == "" {
 		return fmt.Errorf("birth date is required")
 	}
 
-	if birth.After(time.Now()) {
+	parsedDate, err := time.Parse("2006-01-02", admin.BirthDate)
+	if err != nil {
+		return fmt.Errorf("invalid birth date format, expected YYYY-MM-DD")
+	}
+
+	if parsedDate.After(time.Now()) {
 		return fmt.Errorf("birth date cannot be in the future")
 	}
 
-	age := time.Now().Year() - birth.Year()
-
-	if time.Now().YearDay() < birth.YearDay() {
-		age--
-	}
-
+	age := calculateAge(parsedDate)
 	if age < 18 {
 		return fmt.Errorf("minimum age is 18 years old")
 	}
@@ -61,4 +59,15 @@ func ValidateAdminInput(admin dtos.AdminInput) error {
 	}
 
 	return nil
+}
+
+func calculateAge(birth time.Time) int {
+	now := time.Now()
+	age := now.Year() - birth.Year()
+
+	if now.YearDay() < birth.YearDay() {
+		age--
+	}
+
+	return age
 }

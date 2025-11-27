@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jhonnydsl/clinify-backend/src/dtos"
@@ -10,8 +11,8 @@ import (
 
 type AdminRepository struct{}
 
-func (r *AdminRepository) CreateAdmin(ctx context.Context, admin dtos.AdminInput) (uuid.UUID, error) {
-	query := `INSERT INTO clients (full_name, email, password_hash, birth_date, crp, bio, profile_img_url, office_address, phone, public_slug)
+func (r *AdminRepository) CreateAdmin(ctx context.Context, admin dtos.AdminInput, birthDate time.Time) (uuid.UUID, error) {
+	query := `INSERT INTO clients (full_name, email, password_hash, birth_date, crp, bio, profile_image_url, office_address, phone, public_slug)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	RETURNING id`
 
@@ -23,7 +24,7 @@ func (r *AdminRepository) CreateAdmin(ctx context.Context, admin dtos.AdminInput
 		admin.FullName, 
 		admin.Email, 
 		admin.Password, 
-		admin.BirthDate,
+		birthDate,
 		admin.Crp,
 		admin.Bio,
 		admin.ProfileImage,
