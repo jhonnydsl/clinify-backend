@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jhonnydsl/clinify-backend/src/repository"
 	"github.com/jhonnydsl/clinify-backend/src/routes"
+	"github.com/jhonnydsl/clinify-backend/src/utils/middlewares"
 	"github.com/joho/godotenv"
 )
 
@@ -25,10 +26,13 @@ func main() {
 	defer repository.DB.Close()
 
 	app := gin.Default()
+	app.Use(middlewares.ErrorMiddlewareHandle())
 
 	v1 := app.Group("/api/v1")
 	{
 		routes.SetupAdminRoutes(v1)
+		routes.SetupPatientRoutes(v1)
+		routes.SetupLoginRoutes(v1)
 	}
 
 	app.Run(":8080")
