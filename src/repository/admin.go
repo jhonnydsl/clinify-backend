@@ -39,3 +39,17 @@ func (r *AdminRepository) CreateAdmin(ctx context.Context, admin dtos.AdminInput
 
 	return id, nil
 }
+
+func (r *AdminRepository) FindAdminIDBySlug(ctx context.Context, slug string) (uuid.UUID, error) {
+	query := `SELECT id FROM clients WHERE public_slug = $1 LIMIT 1`
+
+	var id uuid.UUID
+
+	err := DB.QueryRowContext(ctx, query, slug).Scan(&id)
+	if err != nil {
+		utils.LogError("FindAdminBySlug (error in SELECT clients)", err)
+		return uuid.UUID{}, utils.InternalServerError("invalid client slug")
+	}
+
+	return id, nil
+}

@@ -8,7 +8,10 @@ import (
 )
 
 func SetupPatientRoutes(app *gin.RouterGroup) {
-	patientService := &services.PatientService{Repo: &repository.PatientRepository{}}
+	patientService := &services.PatientService{
+		Repo: &repository.PatientRepository{},
+		AdminRepo: &repository.AdminRepository{},
+	}
 	patientController := &controllers.PatientController{Service: patientService}
 
 	patient := app.Group("/patient")

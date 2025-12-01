@@ -11,9 +11,9 @@ import (
 
 type PatientRepository struct{}
 
-func (r *PatientRepository) CreatePatient(ctx context.Context, patient dtos.PatientInput, birthDate time.Time) (uuid.UUID, error) {
-	query := `INSERT INTO patients (full_name, email, password_hash, phone, birth_date)
-	VALUES ($1, $2, $3, $4, $5)
+func (r *PatientRepository) CreatePatient(ctx context.Context, patient dtos.PatientInput, birthDate time.Time, clientID uuid.UUID) (uuid.UUID, error) {
+	query := `INSERT INTO patients (full_name, email, password_hash, phone, birth_date, client_id)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING id`
 
 	var id uuid.UUID
@@ -26,6 +26,7 @@ func (r *PatientRepository) CreatePatient(ctx context.Context, patient dtos.Pati
 		patient.Password,
 		patient.Phone,
 		birthDate,
+		clientID,
 	).Scan(&id)
 	if err != nil {
 		utils.LogError("PatientRepository (erro ao criar user paciente)", err)

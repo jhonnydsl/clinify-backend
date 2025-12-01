@@ -12,12 +12,19 @@ import (
 
 type PatientService struct {
 	Repo *repository.PatientRepository
+	AdminRepo *repository.AdminRepository
 }
 
 func (service *PatientService) CreatePatient(ctx context.Context, patient dtos.PatientInput) (uuid.UUID, error) {
 	if err := utils.ValidatePatientInput(patient); err != nil {
 		utils.LogError("createPatient service (error validating patient input)", err)
 		return uuid.UUID{}, utils.BadRequestError(err.Error())
+	}
+
+	clientUUID, err := service.AdminRepo.FindAdminIDBySlug(ctx, patient.PublicSlug)
+	if err != nil {
+		utils.LogError("createPatient service (error get client_id by public_slug)", err)
+		return uuid.UUID{}, utils.BadRequestError("invalid admin url")
 	}
 
 	hashedPassword, err := utils.HashPassword(patient.Password)
@@ -34,7 +41,7 @@ func (service *PatientService) CreatePatient(ctx context.Context, patient dtos.P
 		return uuid.UUID{}, utils.BadRequestError("invalid birth date format, expected YYYY-MM-DD")
 	}
 
-	id, err := service.Repo.CreatePatient(ctx, patient, parsedDate)
+	id, err := service.Repo.CreatePatient(ctx, patient, parsedDate, clientUUID)
 	if err != nil {
 		utils.LogError("createPatient service (error to call createPatient repository)", err)
 		return uuid.UUID{}, utils.InternalServerError("error creating user patient")

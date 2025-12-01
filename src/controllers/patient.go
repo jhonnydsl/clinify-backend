@@ -16,13 +16,13 @@ func (controller *PatientController) CreatePatient(c *gin.Context) {
 
 	ctx, cancel := utils.NewDBContext()
 	defer cancel()
-
+	
 	err := c.ShouldBindJSON(&patientInput)
 	if err != nil {
 		c.JSON(utils.GetStatusCode(err), gin.H{"error": err.Error()})
 		return
 	}
-
+	
 	id, err := controller.Service.CreatePatient(ctx, patientInput)
 	if err != nil {
 		c.JSON(utils.GetStatusCode(err), gin.H{"error": err.Error()})
