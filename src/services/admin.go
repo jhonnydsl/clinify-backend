@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jhonnydsl/clinify-backend/src/dtos"
 	"github.com/jhonnydsl/clinify-backend/src/repository"
 	"github.com/jhonnydsl/clinify-backend/src/utils"
+	"github.com/patrickmn/go-cache"
 )
 
 type AdminService struct {
@@ -83,5 +85,22 @@ func (service *AdminService) GetPatients(ctx context.Context, page, limit int) (
 		limit = 10
 	}
 
-	return service.Repo.GetPatients(ctx, page, limit)
+	cacheKey := fmt.Sprintf("patients_page_%d_limit_%d", page, limit)
+
+	if cached, found := utils.Cache.Get(cacheKey); found {
+		cachedRes := cached.(*utils.PatientsCache)
+		return cachedRes.Data, cachedRes.Total, nil
+	}
+
+	patients, total, err := service.Repo.GetPatients(ctx, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	utils.Cache.Set(cacheKey, &utils.PatientsCache {
+		Data: patients,
+		Total: total,
+	}, cache.DefaultExpiration)
+
+	return patients, total, nil
 }
