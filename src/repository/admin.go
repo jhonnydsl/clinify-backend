@@ -210,7 +210,7 @@ func (r *AdminRepository) DeletePatient(ctx context.Context, patientID uuid.UUID
 	return nil
 }
 
-func (r *AdminRepository) GetPatientsByEmail(ctx context.Context, patientID uuid.UUID) (string, error) {
+func (r *AdminRepository) GetPatientEmailByID(ctx context.Context, patientID uuid.UUID) (string, error) {
 	query := `SELECT email FROM patients WHERE id = $1`
 
 	var email string
@@ -222,4 +222,20 @@ func (r *AdminRepository) GetPatientsByEmail(ctx context.Context, patientID uuid
 	}
 
 	return email, nil
+}
+
+func (r *AdminRepository) CreateCalendarSlot(ctx context.Context, input dtos.CalendarSlotsInput, start, end time.Time, adminID uuid.UUID) (uuid.UUID, error) {
+	query := `INSERT INTO calendar_slots (client_id, weekday, start_time, end_time)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id`
+
+	var id uuid.UUID
+
+	err := DB.QueryRowContext(ctx, query, adminID, input.Weekday, start, end).Scan(&id)
+	if err != nil {
+		utils.LogError("creatCalendarSlot repository (error in INSERT)", err)
+		return uuid.UUID{}, utils.InternalServerError("error creating calendar slot")
+	}
+
+	return id, nil
 }

@@ -81,7 +81,7 @@ func (service *AdminService) CreateAppointment(ctx context.Context, input dtos.A
 		return uuid.UUID{}, utils.BadRequestError("invalid patient id format")
 	}
 
-	email, err := service.Repo.GetPatientsByEmail(ctx, patientUUID)
+	email, err := service.Repo.GetPatientEmailByID(ctx, patientUUID)
 	if err != nil {
 		utils.LogError("createAppointment service (error call to getPatientsByEmail repository)", err)
 		return uuid.UUID{}, utils.InternalServerError("error getting email")
@@ -160,4 +160,31 @@ func (service *AdminService) DeletePatient(ctx context.Context, patientID uuid.U
 	}
 
 	return service.Repo.DeletePatient(ctx, patientID)
+}
+
+func (service *AdminService) CreateCalendarSlot(ctx context.Context, input dtos.CalendarSlotsInput, adminID uuid.UUID) (uuid.UUID, error) {
+	start, err := utils.ParseTime(input.StartTime)
+	if err != nil {
+		utils.LogError("createCalendarSlot service (error to parse date)", err)
+		return uuid.UUID{}, utils.BadRequestError("invalid format date")
+	}
+
+	end, err := utils.ParseTime(input.EndTime)
+	if err != nil {
+		utils.LogError("createCalendarSlot service (error to parse date)", err)
+		return uuid.UUID{}, utils.BadRequestError("invalid format date")
+	}
+
+	if !end.After(start) {
+		utils.LogError("createCalendarSlot service (end time must be after start time", err)
+		return uuid.UUID{}, utils.BadRequestError("end time must be after start time")
+	}
+
+	id, err := service.Repo.CreateCalendarSlot(ctx, input, start, end, adminID)
+	if err != nil {
+		utils.LogError("createCalendarSlot service (error call to repository)", nil)
+		return uuid.UUID{}, utils.InternalServerError("error creating calendar slot")
+	}
+
+	return id, nil
 }

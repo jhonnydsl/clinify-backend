@@ -168,3 +168,41 @@ func (controller *AdminController) DeletePatient(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "patient deleted successfully"})
 }
+
+func (controller *AdminController) CreateCalendarSlot(c *gin.Context) {
+	var input dtos.CalendarSlotsInput
+
+	ctx, cancel := utils.NewDBContext()
+	defer cancel()
+	
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(utils.GetStatusCode(err), gin.H{"error": err.Error()})
+		return
+	}
+	
+	clientIDValue, exists := c.Get("id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "client id not found in context"})
+		return
+	}
+
+
+	clientID, err := uuid.Parse(clientIDValue.(string))
+	if err != nil {
+		c.JSON(400, gin.H{"error": "invalid client id"})
+		return
+	}
+
+
+	id, err := controller.Service.CreateCalendarSlot(ctx, input, clientID)
+	if err != nil {
+		c.JSON(utils.GetStatusCode(err), gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "slot created succesfully",
+		"id": 		id,
+	})
+}
